@@ -125,7 +125,13 @@ router.get("/:startDate/:endDate/:long/:lat", (req, res) => {
   const endDateEndHeure = moment(req.params.endDate).endOf("day");
   const endDateStartHeure = moment(req.params.endDate).startOf("day");
 
-  const categories = req.query.categorie;
+   // si on ne saisie pas de categorie, alors categories est un tableau vide
+   let categories = req.query.categorie;
+   if (!categories) {
+     categories = [];
+   } else if (!Array.isArray(categories)) {
+     categories = [categories];
+   }
 
   fetch(
     `https://api-adresse.data.gouv.fr/reverse/?lon=${req.params.long}&lat=${req.params.lat}`
@@ -133,7 +139,6 @@ router.get("/:startDate/:endDate/:long/:lat", (req, res) => {
     .then((response) => response.json())
     .then((infos) => {
       const city = infos.features[0].properties.city;
-
       Event.aggregate([
         {
           $lookup: {
@@ -184,7 +189,7 @@ router.delete("/:id", (req, res) => {
 });
 
 // 7- Mise à jour du compteur NbLike
-router.put("/:idUser/:idEvent", (req, res) => {
+router.put("/like/:idUser/:idEvent", (req, res) => {
   Event.findOne({ _id: req.params.idEvent }).then((eventData) => {
     if (eventData && !eventData.nbLike.includes(req.params.idUser)) {
       Event.updateOne(
@@ -205,7 +210,7 @@ router.put("/:idUser/:idEvent", (req, res) => {
 });
 
 // 8- Mise à jour du nombre de users qui ont booked cet event
-router.put("/:idUser/:idEvent", (req, res) => {
+router.put("/booking/:idUser/:idEvent", (req, res) => {
     Event.findOne({ _id: req.params.idEvent }).then((eventData) => {
       if (eventData && !eventData.nbBooking.includes(req.params.idUser)) {
         Event.updateOne(
@@ -227,11 +232,18 @@ router.put("/:idUser/:idEvent", (req, res) => {
 
 // 9- Route chercher un event par son id
 router.get("/:id", (req, res) => {
-  console.log(req.params.id);
   Event.findById(req.params.id).then(data => {
-   
     res.json({ events: data });
   });
 });
+
+// 10- Route chercher les 5 events qui ont le plus de booking
+router.get("/top/liked", (req, res) => {
+  Event.find({})
+  .then(events => {
+    const sortedEvents = events.sort((a, b) => b.nbLike.length - a.nbLike.length);
+    res.json({ events: sortedEvents });
+  })
+})
 
 module.exports = router;
