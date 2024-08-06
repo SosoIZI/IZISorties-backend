@@ -6,7 +6,7 @@ const eventSchema = mongoose.Schema({
   endTime: Date,
   startDate: Date,
   endDate: Date,
-  place : [{ type: mongoose.Schema.Types.ObjectId, ref: 'places' }], // clé étrangère vers l'id de la place où a lieu cet event
+  place : { type: mongoose.Schema.Types.ObjectId, ref: 'places' }, // clé étrangère vers l'id de la place où a lieu cet event
   pictures: [String],
   description: String,
   price: String,
