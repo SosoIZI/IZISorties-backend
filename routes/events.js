@@ -225,4 +225,5 @@ router.put("/:idUser/:idEvent", (req, res) => {
     });
   });
 
+
 module.exports = router;

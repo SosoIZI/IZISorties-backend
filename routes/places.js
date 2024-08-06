@@ -88,4 +88,13 @@ router.get("/:cp/:name", (req, res) => {
   });
 });
 
+//5- route GET pour récupérer toutes les villes dans la bdd
+
+router.get('/cities', (req, res) => {
+  Place.find()
+  .then(data => {
+    res.json({ allPlaces: data.city });
+  });
+})
+
 module.exports = router;
