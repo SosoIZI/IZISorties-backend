@@ -86,7 +86,7 @@ router.post("/openagenda", (req, res) => {
 });
 
 // 3- Route get en fonction de l'input saisi dans la barre de recherche
-router.get("/:search", (req, res) => {
+router.get("/search/:search", (req, res) => {
   Event.aggregate([
     {
       $lookup: {
@@ -168,7 +168,7 @@ router.get("/:startDate/:endDate/:long/:lat", (req, res) => {
 });
 
 // 5- Route get en fonction du user (afficher les events que l'user a créé)
-router.get("/:id", (req, res) => {
+router.get("/user/:id", (req, res) => {
   Event.find({ user: req.params.id }).then((data) => {
     console.log(data);
     res.json({ events: data });
@@ -224,5 +224,14 @@ router.put("/:idUser/:idEvent", (req, res) => {
       }
     });
   });
+
+// 9- Route chercher un event par son id
+router.get("/:id", (req, res) => {
+  console.log(req.params.id);
+  Event.findById(req.params.id).then(data => {
+   
+    res.json({ events: data });
+  });
+});
 
 module.exports = router;
