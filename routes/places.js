@@ -88,4 +88,23 @@ router.get("/:cp/:name", (req, res) => {
   });
 });
 
+// 5- Route pour récupérer toutes les villes de la bdd
+
+router.get('/cities', (req, res) => {
+  Place.find()
+  .then((data) => {
+    res.json({allCities: data})
+  })
+})
+
+//  6- 
+
+router.get('/:city', (req,res) => {
+  fetch(`https://api-adresse.data.gouv.fr/search/?q=${req.params.city}`)
+  .then((response) => response.json())
+  .then((data) => {
+    res.json({city: data.features})
+        })
+      })
+    
 module.exports = router;
