@@ -6,7 +6,6 @@ const User = require('../models/users');
 const { checkBody } = require('../modules/checkBody');
 const uid2 = require('uid2');
 const bcrypt = require('bcrypt');
-const Swal = require('sweetalert2')
 
 // 1- Route qui créé l'user OpenAgenda 
 router.post("/openAgenda", (req, res) => {
@@ -24,12 +23,7 @@ router.post("/openAgenda", (req, res) => {
   router.post('/signup', (req, res) => {
     if (!checkBody(req.body, ['username','email', 'password'])) {  // if !checkBody === checBody false === isVAlid false
       res.json({ result: false, error: 'Éléments manquants' })
-      Swal.fire({
-        title: 'Erreur!',
-        text: 'Éléments manquants',
-        icon: 'error',
-        confirmButtonText: 'Validate'
-      })
+    
       return;
     }
   
@@ -53,7 +47,7 @@ router.post("/openAgenda", (req, res) => {
       } else {
         //Si data n'est pas null: L'utilisateur existe déja dans la base de donnée
         res.json({ result: false, error: 'Utilisateur déja inscrit' })
-        alert( 'Utilisateur déja inscrit');
+    
       }
     });
   });
@@ -64,7 +58,6 @@ router.post("/openAgenda", (req, res) => {
   router.post('/signin', (req, res) => {
     if (!checkBody(req.body, ['username'||'email', 'password'])) {
       res.json({ result: false, error: 'Erreur: Informations manquantes' });
-      alert( 'Erreur: Informations manquantes');
       return;
     }
   // Une fois que les données ont été renseignées, à savoir mail/pseudo et password on va contrôler l'exactitude du password 
@@ -74,7 +67,7 @@ router.post("/openAgenda", (req, res) => {
         res.json({ result: true, token: data.token });
       } else {
         res.json({ result: false, error: 'Utilisateur non trouvé, mot de passe faux' });
-        alert( 'Utilisateur non trouvé, mot de passe faux')
+    
       }
     });
   });
