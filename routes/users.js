@@ -29,7 +29,7 @@ router.post("/openAgenda", (req, res) => {
   
     // On regarde si l'utilisateur ne s'est pas déja enregistré
 
-    User.findOne({ username: req.body.username }).then(data => {
+    User.findOne({ email: req.body.email }).then(data => {
       if (data === null) {// Si data null alors on crée un nouvel User)
         const hash = bcrypt.hashSync(req.body.password, 10);
   
@@ -56,13 +56,15 @@ router.post("/openAgenda", (req, res) => {
 // 2/   Route pour se connecter
 
   router.post('/signin', (req, res) => {
-    if (!checkBody(req.body, ['username'||'email', 'password'])) {
+    console.log(req.body);
+    if (!checkBody(req.body, ['email', 'password'])) {
       res.json({ result: false, error: 'Erreur: Informations manquantes' });
       return;
     }
   // Une fois que les données ont été renseignées, à savoir mail/pseudo et password on va contrôler l'exactitude du password 
 
-    User.findOne({ username: req.body.username }).then(data => {
+    User.findOne({ email: req.body.email }).then(data => {
+      console.log(data);
       if (data && bcrypt.compareSync(req.body.password, data.password)) {
         res.json({ result: true, token: data.token });
       } else {
@@ -71,7 +73,6 @@ router.post("/openAgenda", (req, res) => {
       }
     });
   });
-  
   
   module.exports = router;
   
