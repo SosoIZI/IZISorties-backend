@@ -116,61 +116,143 @@ router.get("/search/:search", (req, res) => {
 
 // géolib?
 // 4- Route get en fonction des filtres de recherche (dates, catégories, lieu)
+// music&categorie=cinema
 // pour tester cette route dans Thunder : http://localhost:3000/events/2024-04-01/2024-08-30/-1.65551/48.114985?categorie=music&categorie=cinema
-router.get("/:startDate/:endDate/:long/:lat", (req, res) => {
-  // On utilise le module moment car mongoDB n'arrive pas à lire les dates
-  const startDateEndHeure = moment(req.params.startDate).endOf("day");
-  const startDateStartHeure = moment(req.params.startDate).startOf("day");
+router.get("/:startDate/:endDate/:city", (req, res) => {
+  // Utiliser le module moment pour formater les dates
+  const startDateEndHeure = moment(req.params.startDate).endOf("day").toDate();
+  const startDateStartHeure = moment(req.params.startDate).startOf("day").toDate();
+  const endDateEndHeure = moment(req.params.endDate).endOf("day").toDate();
+  const endDateStartHeure = moment(req.params.endDate).startOf("day").toDate();
 
-  const endDateEndHeure = moment(req.params.endDate).endOf("day");
-  const endDateStartHeure = moment(req.params.endDate).startOf("day");
+  // Si aucune catégorie n'est saisie, alors categories est un tableau vide
+  let categories = req.query.categorie;
+  if (!categories) {
+    categories = [];
+  } else if (!Array.isArray(categories)) {
+    categories = [categories];
+  }
 
-   // si on ne saisie pas de categorie, alors categories est un tableau vide
-   let categories = req.query.categorie;
-   if (!categories) {
-     categories = [];
-   } else if (!Array.isArray(categories)) {
-     categories = [categories];
-   }
-
-  fetch(
-    `https://api-adresse.data.gouv.fr/reverse/?lon=${req.params.long}&lat=${req.params.lat}`
-  )
-    .then((response) => response.json())
-    .then((infos) => {
+  // Récupérer la ville à partir des coordonnées
+  fetch(`https://api-adresse.data.gouv.fr/search/?q=${req.params.city}`)
+    .then(response => response.json())
+    .then(infos => {
       const city = infos.features[0].properties.city;
-      Event.aggregate([
-        {
-          $lookup: {
-            from: "places", // La collection à joindre
-            localField: "place", // Le nom de la propriété (clé étrangère)
-            foreignField: "_id", // Le champ de la collection qui fait le lien
-            as: "placeInfo", // Le nom du champ de résultat après la jointure
-          },
+
+
+      // Place.find({
+      //   'city': {$regex: city}
+      // })
+      // .populate('events')
+
+  // Rechercher les événements
+  // Event.find({
+  //   endDate: { $gte: endDateStartHeure, $lte: endDateEndHeure },
+  //   startDate: { $gte: startDateStartHeure, $lte: startDateEndHeure },
+  //   categories: { $in: categories },
+  //   'place.city': { $regex: city, $options: "i" }
+  // })
+  Event.aggregate([
+    {
+      $lookup: {
+        from: "places", // La collection à joindre
+        localField: "place", // Le nom de la propriété (clé étrangère)
+        foreignField: "_id", // Le champ de la collection qui fait le lien
+        as: "placeInfo", // Le nom du champ de résultat après la jointure
+      },
+    },
+    {
+      $unwind: "$placeInfo", // Décompose le tableau résultant de la jointure en documents individuels
+    },
+    {
+      $match: {
+        endDate: {
+          $gte: new Date(endDateStartHeure),
+          $lte: new Date(endDateEndHeure),
         },
-        {
-          $unwind: "$placeInfo", // Décompose le tableau résultant de la jointure en documents individuels
+        startDate: {
+          $gte: new Date(startDateStartHeure),
+          $lte: new Date(startDateEndHeure),
         },
-        {
-          $match: {
-            endDate: {
-              $gte: new Date(endDateStartHeure),
-              $lte: new Date(endDateEndHeure),
-            },
-            startDate: {
-              $gte: new Date(startDateStartHeure),
-              $lte: new Date(startDateEndHeure),
-            },
-            categories: { $in: categories },
-            "placeInfo.city": { $regex: city, $options: "i" },
-          },
-        },
-      ]).then((data) => {
-        console.log(data);
-        res.json({ events: data });
-      });
-    });
+        categories: { $in: categories },
+        "placeInfo.city": { $regex: city, $options: "i" },
+      },
+    },
+  ])
+  .then(events => {res.json({ events })})
+
+
+  // .populate('place')
+  // .then(events => {
+  //   res.json({ events });
+  // })
+  .catch(error => {
+    console.error(error);
+    res.status(500).json({ error: 'Une erreur est survenue' });
+  });
+})
+.catch(error => {
+  console.error(error);
+  res.status(500).json({ error: 'Une erreur est survenue lors de la récupération de la ville' });
 });
+});
+// // géolib?
+// // 4- Route get en fonction des filtres de recherche (dates, catégories, lieu)
+// // pour tester cette route dans Thunder : http://localhost:3000/events/2024-04-01/2024-08-30/-1.65551/48.114985?categorie=music&categorie=cinema
+// router.get("/:startDate/:endDate/:long/:lat", (req, res) => {
+//   // On utilise le module moment car mongoDB n'arrive pas à lire les dates
+//   const startDateEndHeure = moment(req.params.startDate).endOf("day");
+//   const startDateStartHeure = moment(req.params.startDate).startOf("day");
+
+//   const endDateEndHeure = moment(req.params.endDate).endOf("day");
+//   const endDateStartHeure = moment(req.params.endDate).startOf("day");
+
+//    // si on ne saisie pas de categorie, alors categories est un tableau vide
+//    let categories = req.query.categorie;
+//    if (!categories) {
+//      categories = [];
+//    } else if (!Array.isArray(categories)) {
+//      categories = [categories];
+//    }
+
+//   fetch(
+//     `https://api-adresse.data.gouv.fr/reverse/?lon=${req.params.long}&lat=${req.params.lat}`
+//   )
+//     .then((response) => response.json())
+//     .then((infos) => {
+//       const city = infos.features[0].properties.city;
+//       Event.aggregate([
+//         {
+//           $lookup: {
+//             from: "places", // La collection à joindre
+//             localField: "place", // Le nom de la propriété (clé étrangère)
+//             foreignField: "_id", // Le champ de la collection qui fait le lien
+//             as: "placeInfo", // Le nom du champ de résultat après la jointure
+//           },
+//         },
+//         {
+//           $unwind: "$placeInfo", // Décompose le tableau résultant de la jointure en documents individuels
+//         },
+//         {
+//           $match: {
+//             endDate: {
+//               $gte: new Date(endDateStartHeure),
+//               $lte: new Date(endDateEndHeure),
+//             },
+//             startDate: {
+//               $gte: new Date(startDateStartHeure),
+//               $lte: new Date(startDateEndHeure),
+//             },
+//             categories: { $in: categories },
+//             "placeInfo.city": { $regex: city, $options: "i" },
+//           },
+//         },
+//       ]).then((data) => {
+//         console.log(data);
+//         res.json({ events: data });
+//       });
+//     });
+// });
 
 // 5- Route get en fonction du user (afficher les events que l'user a créé)
 router.get("/user/:id", (req, res) => {
