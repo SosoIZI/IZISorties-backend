@@ -8,11 +8,11 @@ const apiKey = process.env.API_KEY;
 
 const Event = require("../models/events");
 const Place = require("../models/places");
+const User = require("../models/users");
 
 // 1- Route qui créé un nouvel event dans Mongoose
-router.post("/", (req, res) => {
-
-  
+router.post("/:token", (req, res) => {
+  User.findOne({ token: req.params.token }).then((data) => {
   const newEvent = new Event({
     eventName: req.body.eventName,
     startTime: req.body.startTime,
@@ -29,8 +29,9 @@ router.post("/", (req, res) => {
     categories: req.body.categories,
     nbLike: [],
     nbBooking: [],
-    user: req.body.token,
+    user: data._id,
   });
+
   // Quand je crée l'event, la BDD Place se met aussi à jour avec l'id de l'event
   newEvent.save().then((newDoc) => {
     Place.updateOne(
@@ -40,6 +41,7 @@ router.post("/", (req, res) => {
       res.json({ result: newEvent });
     });
   });
+});
 });
 
 // 2- Route qui créé dans Mongoose les events de OpenAgenda
@@ -90,26 +92,32 @@ router.post("/api/openagenda", (req, res) => {
 
 // 3- Route get en fonction de l'input saisi dans la barre de recherche
 router.get("/search/:search", (req, res) => {
-  const searchQuery = req.params.search;
-  
-  Event.find({
-    $or: [
-      { eventName: { $regex: searchQuery, $options: "i" } },
-      { description: { $regex: searchQuery, $options: "i" } },
-      { 'place.city': { $regex: searchQuery, $options: "i" } },
-    ]
-  })
-  .populate('place')
-  .then(data => {
+  Event.aggregate([
+    {
+      $lookup: {
+        from: "places", // La collection à joindre
+        localField: "place", // Le champ local (clé étrangère)
+        foreignField: "_id", // Le champ de la collection jointe
+        as: "placeInfo", // Le nom du champ de résultat après la jointure
+      },
+    },
+    {
+      $unwind: "$placeInfo", // Décompose le tableau résultant de la jointure en documents individuels
+    },
+    {
+      $match: {
+        $or: [
+          { eventName: { $regex: req.params.search, $options: "i" } },
+          { description: { $regex: req.params.search, $options: "i" } },
+          { "placeInfo.city": { $regex: req.params.search, $options: "i" } },
+        ],
+      },
+    },
+  ]).then((data) => {
     console.log(data);
     res.json({ events: data });
-  })
-  .catch(error => {
-    console.error(error);
-    res.status(500).json({ error: 'Une erreur est survenue' });
   });
 });
-
 
 // géolib?
 // 4- Route get en fonction des filtres de recherche (dates, catégories, lieu)
