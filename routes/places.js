@@ -6,14 +6,11 @@ const Place = require("../models/places");
 const apiKey = process.env.API_KEY;
 
 // 1- Route pour ajouter une nouvelle Place (lieu où se passent des events) à partir d'un formulaire
+// c'est le front qui vérifie si la place existe déjà ou pas (la route se lance seulement si la place n'existe pas déjà dans la BDD)
 router.post("/", (req, res) => {
-  // je vérifie que la place n'existe pas déjà dans ma BDD Mongoose
-  Place.findOne({ namePlace: req.body.name }, { cp: req.body.cp }).then(
-    (placeData) => {
-      if (placeData === null) {
-        // si ma place n'existe pas déjà dans ma BDD Place sur Mongoose, alors je créé une nouvelle Place
+  
         const newPlace = new Place({
-          namePlace: req.body.name,
+          namePlace: req.body.namePlace,
           address: req.body.address,
           cp: req.body.cp,
           city: req.body.city,
@@ -22,13 +19,10 @@ router.post("/", (req, res) => {
           events: [],
         });
         newPlace.save();
-        res.json({ result: true });
-      } else {
-        res.json({ result: "la place existe déjà" });
-      }
-    }
+        res.json({ result: newPlace });
+      } 
   );
-});
+
 
 // 2- Route pour ajouter une nouvelle Place (lieu où se passent des events) à partir de OpenAgenda
 router.post("/openagenda", (req, res) => {
@@ -47,6 +41,10 @@ router.post("/openagenda", (req, res) => {
             .then((response) => response.json())
             .then((infos) => {
               // je vérifie que la place n'existe pas déjà dans ma BDD Mongoose
+
+              console.log('data.events', data.events)
+              console.log('infos', infos)
+
               Place.findOne(
                 { namePlace: obj.location.name },
                 { cp: obj.location.city }
@@ -88,4 +86,40 @@ router.get("/:cp/:name", (req, res) => {
   });
 });
 
-module.exports = router;
+// 5- Route pour récupérer toutes les places
+router.get("/", (req, res) => {
+  Place.find().then((data) => {
+    res.json({ result: true, places: data });
+  });
+});
+
+// 6- Mise à jour du compteur du nb d'event pour cette place
+router.put("/newevent", (req, res) => {
+  console.log(req.body);
+  
+    Place.updateOne(
+        { _id: req.body.placeId },
+        { $push: { events: req.body.eventId } }
+      ).then(() => {
+        res.json({ result: "levent a ete rajoute a la place" });
+      });
+});
+
+  router.delete('/delete/:token', (req, res) => {            // on rajoute un nom de route delete pour specifier la route                  
+    User.deleteOne({ token: req.params.token })
+      .then(() => {                                               // supprimer l'id qui est égal à 'id de la requête . c'est l'id qui correspond au bouton supprimer
+        User.find()
+          .then(data => {
+            res.json({ result: true });                           
+          });
+      });
+  })
+
+
+
+
+
+
+  
+  module.exports = router;
+  

@@ -2,8 +2,8 @@ const mongoose = require('mongoose');
 
 const eventSchema = mongoose.Schema({
   eventName: String,
-  startTime: Date,
-  endTime: Date,
+  startTime: String,
+  endTime: String,
   startDate: Date,
   endDate: Date,
   place : { type: mongoose.Schema.Types.ObjectId, ref: 'places' }, // clé étrangère vers l'id de la place où a lieu cet event
