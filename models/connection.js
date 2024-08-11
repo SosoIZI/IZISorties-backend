@@ -1,4 +1,14 @@
+
+
+
+
 const mongoose = require('mongoose');
+require('dotenv').config();
+
+
+
+
+
 
 // const connectionString = process.env.CONNECTION_STRING;
 const connectionString = 'mongodb+srv://ClusterSoso:wtmNFlLOkcKVEHli@clustersoso.7lda9ao.mongodb.net/IZISorties-LaCapsule'
