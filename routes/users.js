@@ -73,6 +73,15 @@ router.post("/openAgenda", (req, res) => {
       }
     });
   });
+
+
+  // Route get en fonction du token 
+router.get("/infos/:token", (req, res) => {
+  User.find({ token: req.params.token }).then((data) => {
+    console.log(data);
+    res.json({ user: data });
+  });
+});
   
   module.exports = router;
   

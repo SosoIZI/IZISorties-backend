@@ -72,10 +72,10 @@ router.post("/openagenda", (req, res) => {
     });
 });
 
-// 3- Route pour récupérer tous les events d’une place en fonction de son id
+// 3- Route pour récupérer les infos d’une place en fonction de son id
 router.get("/:id", (req, res) => {
   Place.find({ _id: req.params.id }).then((data) => {
-    res.json({ result: true, events: data });
+    res.json({ result: true, place: data });
   });
 });
 

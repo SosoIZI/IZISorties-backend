@@ -194,45 +194,49 @@ router.delete("/:id", (req, res) => {
 });
 
 // 7- Mise à jour du compteur NbLike
-router.put("/like/:idUser/:idEvent", (req, res) => {
+router.put("/like/:token/:idEvent", (req, res) => {
+  User.findOne({ token: req.params.token }).then((userData) => {
   Event.findOne({ _id: req.params.idEvent }).then((eventData) => {
-    if (eventData && !eventData.nbLike.includes(req.params.idUser)) {
+    if (eventData && !eventData.nbLike.includes(userData._id)) {
       Event.updateOne(
         { _id: req.params.idEvent },
-        { $push: { nbLike: req.params.idUser } }
+        { $push: { nbLike: userData._id } }
       ).then(() => {
         res.json({ result: true });
       });
     } else {
       Event.updateOne(
         { _id: req.params.idEvent },
-        { $pull: { nbLike: req.params.idUser } }
+        { $pull: { nbLike: userData._id } }
       ).then(() => {
         res.json({ result: false });
       });
     }
   });
 });
+});
 
 // 8- Mise à jour du nombre de users qui ont booked cet event
-router.put("/booking/:idUser/:idEvent", (req, res) => {
+router.put("/booking/:token/:idEvent", (req, res) => {
+  User.findOne({ token: req.params.token }).then((userData) => {
   Event.findOne({ _id: req.params.idEvent }).then((eventData) => {
-    if (eventData && !eventData.nbBooking.includes(req.params.idUser)) {
+    if (eventData && !eventData.nbBooking.includes(userData._id)) {
       Event.updateOne(
         { _id: req.params.idEvent },
-        { $push: { nbBooking: req.params.idUser } }
+        { $push: { nbBooking: userData._id } }
       ).then(() => {
         res.json({ result: true });
       });
     } else {
-      Tweet.updateOne(
+      Event.updateOne(
         { _id: req.params.idEvent },
-        { $pull: { nbBooking: req.params.idUser } }
+        { $pull: { nbBooking: userData._id } }
       ).then(() => {
         res.json({ result: false });
       });
     }
   });
+});
 });
 
 // 9- Route chercher un event par son id
