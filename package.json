@@ -16,6 +16,7 @@
     "mongoose": "^8.5.2",
     "morgan": "~1.9.1",
     "node-fetch": "2",
+    "nodemailer": "^6.9.14",
     "sweetalert2": "^11.12.4",
     "uid2": "^1.0.0"
   }
