@@ -119,6 +119,7 @@ router.get("/search/:search", (req, res) => {
   });
 });
 
+
 // géolib?
 // 4- Route get en fonction des filtres de recherche (dates, catégories, lieu)
 // music&categorie=cinema
