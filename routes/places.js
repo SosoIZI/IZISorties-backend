@@ -8,7 +8,6 @@ const apiKey = process.env.API_KEY;
 // 1- Route pour ajouter une nouvelle Place (lieu où se passent des events) à partir d'un formulaire
 // c'est le front qui vérifie si la place existe déjà ou pas (la route se lance seulement si la place n'existe pas déjà dans la BDD)
 router.post("/", (req, res) => {
-  
         const newPlace = new Place({
           namePlace: req.body.namePlace,
           address: req.body.address,
@@ -72,10 +71,10 @@ router.post("/openagenda", (req, res) => {
     });
 });
 
-// 3- Route pour récupérer tous les events d’une place en fonction de son id
+// 3- Route pour récupérer les infos d’une place en fonction de son id
 router.get("/:id", (req, res) => {
   Place.find({ _id: req.params.id }).then((data) => {
-    res.json({ result: true, events: data });
+    res.json({ result: true, place: data });
   });
 });
 
@@ -108,8 +107,8 @@ router.get("/", (req, res) => {
 
 // 7- Mise à jour du compteur du nb d'event pour cette place
 router.put("/newevent", (req, res) => {
-  console.log(req.body);
-  
+  console.log('la route newevent se lance');
+  console.log('req.body', req.body)
     Place.updateOne(
         { _id: req.body.placeId },
         { $push: { events: req.body.eventId } }
@@ -118,4 +117,21 @@ router.put("/newevent", (req, res) => {
       });
 });
 
-module.exports = router;
+  router.delete('/delete/:token', (req, res) => {            // on rajoute un nom de route delete pour specifier la route                  
+    User.deleteOne({ token: req.params.token })
+      .then(() => {                                               // supprimer l'id qui est égal à 'id de la requête . c'est l'id qui correspond au bouton supprimer
+        User.find()
+          .then(data => {
+            res.json({ result: true });                           
+          });
+      });
+  })
+
+
+
+
+
+
+  
+  module.exports = router;
+  

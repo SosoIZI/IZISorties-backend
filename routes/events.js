@@ -13,38 +13,38 @@ const User = require("../models/users");
 // 1- Route qui créé un nouvel event dans Mongoose
 router.post("/:token", (req, res) => {
   User.findOne({ token: req.params.token }).then((data) => {
-  const newEvent = new Event({
-    eventName: req.body.eventName,
-    startTime: req.body.startTime,
-    endTime: req.body.endTime,
-    startDate: req.body.startDate,
-    endDate: req.body.endDate,
-    place: req.body.placeId,
-    // dans le formulaire dans le frontend, l'utilisateur devra rattacher son évènement à une place
-    // sinon il créera sa place dans le formulaire directement.
-    // dans tous les cas, la soumission du formulaire enverra un id de place
-    pictures: req.body.pictures,
-    description: req.body.description,
-    price: req.body.price,
-    categories: req.body.categories,
-    nbLike: [],
-    nbBooking: [],
-    user: data._id,
-  });
+    const newEvent = new Event({
+      eventName: req.body.eventName,
+      startTime: req.body.startTime,
+      endTime: req.body.endTime,
+      startDate: req.body.startDate,
+      endDate: req.body.endDate,
+      place: req.body.placeId,
+      // dans le formulaire dans le frontend, l'utilisateur devra rattacher son évènement à une place
+      // sinon il créera sa place dans le formulaire directement.
+      // dans tous les cas, la soumission du formulaire enverra un id de place
+      pictures: req.body.pictures,
+      description: req.body.description,
+      price: req.body.price,
+      categories: req.body.categories,
+      nbLike: [],
+      nbBooking: [],
+      user: data._id,
+    });
 
-  // Quand je crée l'event, la BDD Place se met aussi à jour avec l'id de l'event
-  newEvent.save().then((newDoc) => {
-    Place.updateOne(
-      { _id: req.body.place },
-      { $push: { events: newDoc._id } }
-    ).then(() => {
-      res.json({ result: newEvent });
+    // Quand je crée l'event, la BDD Place se met aussi à jour avec l'id de l'event
+    newEvent.save().then((newDoc) => {
+      Place.updateOne(
+        { _id: req.body.place },
+        { $push: { events: newDoc._id } }
+      ).then(() => {
+        res.json({ result: newEvent });
+      });
     });
   });
 });
-});
 
-// 2- Route qui créé dans Mongoose les events de OpenAgenda
+// 2- Route qui créé dans Mongoose les events de OpenAgenda /!\ avoir lancer la route openagenda de places avant !!!
 router.post("/api/openagenda", (req, res) => {
   fetch(`https://api.openagenda.com/v2/agendas/20500020/events?key=${apiKey}`)
     .then((response) => response.json())
@@ -62,7 +62,11 @@ router.post("/api/openagenda", (req, res) => {
                 { cp: infos.features[0].properties.citycode }
               ).then((placeData) => {
                 if (placeData != null) {
-                  {obj.image ? (pictures= obj.image.base + obj.image.filename) : (pictures= "/IZI_sorties_home.png")}
+                  {
+                    obj.image
+                      ? (pictures = obj.image.base + obj.image.filename)
+                      : (pictures = "/IZI_sorties_home.png");
+                  }
                   const newEvent = new Event({
                     eventName: obj.title.fr,
                     startTime: moment(obj.nextTiming.begin).format("HH:mm"),
@@ -70,7 +74,7 @@ router.post("/api/openagenda", (req, res) => {
                     startDate: new Date(obj.firstTiming.begin),
                     endDate: new Date(obj.lastTiming.begin),
                     place: placeData._id,
-                    pictures: pictures,                    
+                    pictures: pictures,
                     description: obj.description.fr,
                     price: "",
                     categories: ["music", "cinema"],
@@ -78,7 +82,19 @@ router.post("/api/openagenda", (req, res) => {
                     nbBooking: [],
                     user: "66b0aa0fc4c8131877047e63", // Mettre l'_id de OpenAgenda dans la collection "users" (cet user est déjà créé sinon le créer avec la route http://localhost:3000/users/openAgenda)
                   });
-                  newEvent.save();
+                  newEvent.save().then();
+                  fetch(`http://localhost:3000/places/newevent`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      placeId: placeData._id,
+                      eventId: newEvent._id,
+                    }),
+                  })
+                    .then((response) => response.json())
+                    .then((data) => {
+                      console.log(data);
+                    });
                 }
               });
             });
@@ -202,44 +218,48 @@ router.delete("/:id", (req, res) => {
 });
 
 // 7- Mise à jour du compteur NbLike
-router.put("/like/:idUser/:idEvent", (req, res) => {
-  Event.findOne({ _id: req.params.idEvent }).then((eventData) => {
-    if (eventData && !eventData.nbLike.includes(req.params.idUser)) {
-      Event.updateOne(
-        { _id: req.params.idEvent },
-        { $push: { nbLike: req.params.idUser } }
-      ).then(() => {
-        res.json({ result: true });
-      });
-    } else {
-      Event.updateOne(
-        { _id: req.params.idEvent },
-        { $pull: { nbLike: req.params.idUser } }
-      ).then(() => {
-        res.json({ result: false });
-      });
-    }
+router.put("/like/:token/:idEvent", (req, res) => {
+  User.findOne({ token: req.params.token }).then((userData) => {
+    Event.findOne({ _id: req.params.idEvent }).then((eventData) => {
+      if (eventData && !eventData.nbLike.includes(userData._id)) {
+        Event.updateOne(
+          { _id: req.params.idEvent },
+          { $push: { nbLike: userData._id } }
+        ).then(() => {
+          res.json({ result: true });
+        });
+      } else {
+        Event.updateOne(
+          { _id: req.params.idEvent },
+          { $pull: { nbLike: userData._id } }
+        ).then(() => {
+          res.json({ result: false });
+        });
+      }
+    });
   });
 });
 
 // 8- Mise à jour du nombre de users qui ont booked cet event
-router.put("/booking/:idUser/:idEvent", (req, res) => {
-  Event.findOne({ _id: req.params.idEvent }).then((eventData) => {
-    if (eventData && !eventData.nbBooking.includes(req.params.idUser)) {
-      Event.updateOne(
-        { _id: req.params.idEvent },
-        { $push: { nbBooking: req.params.idUser } }
-      ).then(() => {
-        res.json({ result: true });
-      });
-    } else {
-      Tweet.updateOne(
-        { _id: req.params.idEvent },
-        { $pull: { nbBooking: req.params.idUser } }
-      ).then(() => {
-        res.json({ result: false });
-      });
-    }
+router.put("/booking/:token/:idEvent", (req, res) => {
+  User.findOne({ token: req.params.token }).then((userData) => {
+    Event.findOne({ _id: req.params.idEvent }).then((eventData) => {
+      if (eventData && !eventData.nbBooking.includes(userData._id)) {
+        Event.updateOne(
+          { _id: req.params.idEvent },
+          { $push: { nbBooking: userData._id } }
+        ).then(() => {
+          res.json({ result: true });
+        });
+      } else {
+        Event.updateOne(
+          { _id: req.params.idEvent },
+          { $pull: { nbBooking: userData._id } }
+        ).then(() => {
+          res.json({ result: false });
+        });
+      }
+    });
   });
 });
 
@@ -250,13 +270,39 @@ router.get("/:id", (req, res) => {
   });
 });
 
-// 10- Route chercher les 5 events qui ont le plus de booking
+// 10- Route chercher les 5 events qui ont le plus de like
 router.get("/top/liked", (req, res) => {
   Event.find({}).then((events) => {
-    const sortedEvents = events.sort(
-      (a, b) => b.nbLike.length - a.nbLike.length
-    );
+    let sortedEvents = events.sort((a, b) => b.nbLike.length - a.nbLike.length);
     res.json({ events: sortedEvents });
+  });
+});
+
+// 11- Route pour chercher tous les events que l'user a liké
+router.get("/likelist/user/:token", (req, res) => {
+  User.findOne({ token: req.params.token }).then((userData) => {
+    Event.find({ nbLike: { $in: userData._id } }).then((eventData) => {
+      // tri dans l'ordre croissant des events
+      let sortedEventsLiked = eventData.sort(
+        (a, b) => a.startDate - b.startDate
+      );
+      res.json({ eventsLiked: sortedEventsLiked });
+    });
+  });
+});
+
+// 12- Route pour chercher tous les events que l'user a liké
+router.get("/bookinglist/user/:token", (req, res) => {
+  User.findOne({ token: req.params.token }).then((userData) => {
+    Event.find({
+      nbBooking: { $in: userData._id },
+    }).then((eventData) => {
+      // tri dans l'ordre croissant des events
+      let sortedEventsBooked = eventData.sort(
+        (a, b) => a.startDate - b.startDate
+      );
+      res.json({ eventsBooked: sortedEventsBooked });
+    });
   });
 });
 

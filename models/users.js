@@ -10,6 +10,15 @@ const userSchema = mongoose.Schema({
 //   eventBooked: [{ type: mongoose.Schema.Types.ObjectId, ref: 'events' }], // clé étrangère pour lier l'event à l'utilisateur.
 //   j'ai supprimé les paramètres  "eventLiked et eventBooked".
 //   Ce seront des props du reducer persistant "event"
+resetPasswordToken: String, // Pour réinitialiser le TOKEN // Google auth
+resetPasswordExpires: Date,  //Timer pour que la demande de password expire
+
+
+
+
+
+
+
  });
 
 const User = mongoose.model('users', userSchema);
