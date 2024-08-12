@@ -52,7 +52,7 @@ router.post("/signup", (req, res) => {
   });
 });
 
-// 3-   Route pour se connecter
+// 3-Route pour se connecter
 router.post("/signin", (req, res) => {
   // console.log(req.body);
   if (!checkBody(req.body, ["email", "password"])) {
@@ -60,7 +60,6 @@ router.post("/signin", (req, res) => {
     return;
   }
   // Une fois que les données ont été renseignées, à savoir mail/pseudo et password on va contrôler l'exactitude du password
-
   User.findOne({ email: req.body.email }).then((data) => {
     console.log(data);
     if (data && bcrypt.compareSync(req.body.password, data.password)) {
@@ -74,6 +73,7 @@ router.post("/signin", (req, res) => {
   });
 });
 
+// 4-Route pour supprimer un user
   router.delete('/delete/:token', (req, res) => {            // on rajoute un nom de route delete pour specifier la route                  
     User.deleteOne({ token: req.params.token })
       .then(() => {                                               // supprimer l'id qui est égal à 'id de la requête . c'est l'id qui correspond au bouton supprimer
@@ -84,25 +84,20 @@ router.post("/signin", (req, res) => {
       });
   })
 
-
-
+// 5-Route pour renouveler son mot de passe
   router.post('/forgot-password', (req, res) => { // route pour faire la demande de changement de mdp-//
     const { email } = req.body;
-    
     User.findOne({ email }).then(user => {
         if (!user) {
             return res.json({ result: false, error: 'Utilisateur non trouvé' });
         }
-
     // Générer un token unique et une date d'expiration
     const token = crypto.randomBytes(32).toString("hex");
     const expirationDate = Date.now() + 3600000; // token valable une heure
-
     // Sauvegarder le token et la date d'expiration dans la base de données
     user.resetPasswordToken = token;
     user.resetPasswordExpires = expirationDate;
     user.save();
-
     // Configurer le service de messagerie
     const transporter = nodemailer.createTransport({
       //La méthode createTransport est utilisée pour configurer et créer un transporteur (transport) qui enverra les emails via un service de messagerie (comme Gmail).
@@ -127,7 +122,6 @@ router.post("/signin", (req, res) => {
                  http://localhost:3001/reset-password?token=${token} 
                  Si vous n'avez pas demandé cela, ignorez cet e-mail et votre mot de passe restera inchangé.`,
     };
-
     console.log("allo");
     // Envoyer l'email
     transporter.sendMail(mailOptions, (err) => {
@@ -143,9 +137,9 @@ router.post("/signin", (req, res) => {
   });
 });
 
+// 5BIS-Route pour renouveler son mot de passe
 router.post("/reset-password/:token", (req, res) => {
   const { password } = req.body;
-
   User.findOne({
     resetPasswordToken: req.params.token,
     resetPasswordExpires: { $gt: Date.now() },
@@ -157,7 +151,6 @@ router.post("/reset-password/:token", (req, res) => {
           error: "Le token de réinitialisation est invalide ou a expiré.",
         });
       }
-
       // Mettre à jour le mot de passe et supprimer les informations de réinitialisation
       const hash = bcrypt.hashSync(password, 10);
       user.password = hash;
@@ -172,7 +165,7 @@ router.post("/reset-password/:token", (req, res) => {
 });
 })
 
-// 5- Route get les infos du user en fonction du token
+// 6- Route get les infos du user en fonction du token
 router.get("/infos/:token", (req, res) => {
   User.find({ token: req.params.token }).then((data) => {
     console.log(data);
@@ -180,14 +173,11 @@ router.get("/infos/:token", (req, res) => {
   });
 });
 
-
-  
-  module.exports = router;
+module.exports = router;
   
 
 
 /*
-
   Demande de Réinitialisation (Route /forgot-password) :
 
 L'utilisateur fait une demande de réinitialisation en fournissant son email.   ((((route forgot/password))))
