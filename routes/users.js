@@ -77,7 +77,6 @@ router.post("/openAgenda", (req, res) => {
     });
   });
 
-<<<<<<< HEAD
   router.delete('/delete/:token', (req, res) => {            // on rajoute un nom de route delete pour specifier la route                  
     User.deleteOne({ token: req.params.token })
       .then(() => {                                               // supprimer l'id qui est égal à 'id de la requête . c'est l'id qui correspond au bouton supprimer
@@ -88,9 +87,6 @@ router.post("/openAgenda", (req, res) => {
       });
   })
 
-
-
-=======
   router.post('/forgot-password', (req, res) => { // route pour faire la demande de changement de mdp-//
     const { email } = req.body;
     
@@ -165,7 +161,6 @@ router.post('/reset-password/:token', (req, res) => {
           });
       });
 });
->>>>>>> test
 
 
 
