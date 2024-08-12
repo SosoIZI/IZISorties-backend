@@ -104,4 +104,21 @@ router.put("/newevent", (req, res) => {
       });
 });
 
-module.exports = router;
+  router.delete('/delete/:token', (req, res) => {            // on rajoute un nom de route delete pour specifier la route                  
+    User.deleteOne({ token: req.params.token })
+      .then(() => {                                               // supprimer l'id qui est égal à 'id de la requête . c'est l'id qui correspond au bouton supprimer
+        User.find()
+          .then(data => {
+            res.json({ result: true });                           
+          });
+      });
+  })
+
+
+
+
+
+
+  
+  module.exports = router;
+  

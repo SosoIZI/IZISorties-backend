@@ -139,6 +139,9 @@ router.get("/search/:search", (req, res) => {
 // 4- Route get en fonction des filtres de recherche (dates, catégories, lieu)
 // pour tester cette route dans Thunder : http://localhost:3000/events/2024-04-01/2024-08-30/-1.65551/48.114985?categorie=music&categorie=cinema
 router.get("/:startDate/:endDate/:long/:lat", (req, res) => {
+  try {
+    
+  
   // On utilise le module moment car mongoDB n'arrive pas à lire les dates
   const startDateEndHeure = moment(req.params.startDate).endOf("day");
   const startDateStartHeure = moment(req.params.startDate).startOf("day");
@@ -154,11 +157,16 @@ router.get("/:startDate/:endDate/:long/:lat", (req, res) => {
     categories = [categories];
   }
 
+   console.log(`https://api-adresse.data.gouv.fr/reverse/?lon=${req.params.long}&lat=${req.params.lat}`);
   fetch(
     `https://api-adresse.data.gouv.fr/reverse/?lon=${req.params.long}&lat=${req.params.lat}`
   )
     .then((response) => response.json())
     .then((infos) => {
+      console.log(infos.features[0])
+      if(infos.features[0]){
+
+      
       const city = infos.features[0].properties.city;
       Event.aggregate([
         {
@@ -190,7 +198,13 @@ router.get("/:startDate/:endDate/:long/:lat", (req, res) => {
         console.log(data);
         res.json({ events: data });
       });
+    } {
+      res.json({result: false, error: "pas trouvé"})
+    }
     });
+  } catch (error) {
+    console.error(error)
+  }
 });
 
 // 5- Route get en fonction du user (afficher les events que l'user a créé)
