@@ -172,6 +172,13 @@ router.post("/reset-password/:token", (req, res) => {
 });
 })
 
+// 5- Route get les infos du user en fonction du token
+router.get("/infos/:token", (req, res) => {
+  User.find({ token: req.params.token }).then((data) => {
+    console.log(data);
+    res.json({ user: data });
+  });
+});
 
 
   
