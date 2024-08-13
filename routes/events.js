@@ -91,6 +91,9 @@ router.post("/api/openagenda", (req, res) => {
 });
 
 // 3- Route get en fonction de l'input saisi dans la barre de recherche
+
+//http://localhost:3000/events/search/:rennes test thunderCLIENT OK
+
 router.get("/search/:search", (req, res) => {
   Event.aggregate([
     {
