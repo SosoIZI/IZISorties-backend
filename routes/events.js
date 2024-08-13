@@ -182,7 +182,7 @@ router.get("/:startDate/:endDate/:long/:lat", (req, res) => {
         console.log(data);
         res.json({ events: data });
       });
-    } {
+    } else {
       res.json({result: false, error: "pas trouvé"})
     }
     });

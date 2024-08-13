@@ -77,7 +77,6 @@ router.post("/openAgenda", (req, res) => {
     });
   });
 
-<<<<<<< HEAD
   router.delete('/delete/:token', (req, res) => {            // on rajoute un nom de route delete pour specifier la route                  
     User.deleteOne({ token: req.params.token })
       .then(() => {                                               // supprimer l'id qui est égal à 'id de la requête . c'est l'id qui correspond au bouton supprimer
@@ -90,7 +89,6 @@ router.post("/openAgenda", (req, res) => {
 
 
 
-=======
   router.post('/forgot-password', (req, res) => { // route pour faire la demande de changement de mdp-//
     const { email } = req.body;
     
@@ -132,7 +130,7 @@ router.post("/openAgenda", (req, res) => {
                  Si vous n'avez pas demandé cela, ignorez cet e-mail et votre mot de passe restera inchangé.`,
       };
 
-      console.log("allo");
+      
       // Envoyer l'email
       transporter.sendMail(mailOptions, (err) => {
   
@@ -165,9 +163,32 @@ router.post('/reset-password/:token', (req, res) => {
           });
       });
 });
->>>>>>> test
 
+router.post('/google-auth', (req, res) => {
+  const { name,email} = req.body;
+  console.log("coucou")
+  User.findOne({ email }).then(user => {
+    if (user) {
+      // Si l'utilisateur existe, renvoyer le token
+      res.json({ result: true, token: user.token });
+    } else {
+      // Si l'utilisateur n'existe pas, créer un nouveau compte
+      const newUser = new User({
+        username: name,
+        email: email,
+        token: uid2(32), // Créez un nouveau token pour l'utilisateur
+      });
 
+      newUser.save().then(newDoc => {
+        res.json({ result: true, token: newDoc.token });
+      }).catch(error => {
+        res.json({ result: false, error: "Erreur lors de la création de l'utilisateur" });
+      });
+    }
+  }).catch(error => {
+    res.json({ result: false, error: "Erreur lors de la vérification de l'utilisateur" });
+  });
+});
 
   
   module.exports = router;
