@@ -1,10 +1,15 @@
 var express = require("express");
 var router = express.Router();
+const fetch = require('node-fetch');
 
 require("../models/connection");
 const moment = require("moment");
 moment().format();
 const apiKey = process.env.API_KEY;
+
+const fs = require('fs');
+const path = require('path'); // Import de path pour gérer les chemins de fichiers
+const unzipper = require('unzipper'); // Pour extraire les fichiers ZIP
 
 const Event = require("../models/events");
 const Place = require("../models/places");
@@ -277,7 +282,8 @@ router.get("/:id", (req, res) => {
 
 // 10- Route chercher les 5 events qui ont le plus de like
 router.get("/top/liked", (req, res) => {
-  Event.find({}).then((events) => {
+  // Je n'affiche que les events dont la date de fin est au delà d'aujourd'hui
+  Event.find({ endDate: { $gt: new Date() } }).then((events) => {
     let sortedEvents = events.sort((a, b) => b.nbLike.length - a.nbLike.length);
     res.json({ events: sortedEvents });
   });
@@ -309,6 +315,23 @@ router.get("/bookinglist/user/:token", (req, res) => {
       res.json({ eventsBooked: sortedEventsBooked });
     });
   });
+});
+
+// Route DELETE pour supprimer les événements basés sur l'ID du lieu
+router.delete('/events/delete-by-place/:placeId', async (req, res) => {
+  try {
+    const placeId = req.params.placeId;
+    
+    // Suppression des événements où le champ 'place' correspond à l'ID fourni
+    const result = await Event.deleteMany({ place: req.params.placeId });
+
+    res.status(200).json({
+      message: `Nombre de documents supprimés : ${result.deletedCount}`
+    });
+  } catch (error) {
+    console.error("Erreur lors de la suppression des documents :", error);
+    res.status(500).json({ error: 'Erreur lors de la suppression des documents.' });
+  }
 });
 
 module.exports = router;
