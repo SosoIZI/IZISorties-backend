@@ -21,6 +21,7 @@
     "nodemailer": "^6.9.14",
     "sweetalert2": "^11.12.4",
     "uid2": "^1.0.0",
-    "uniqid": "^5.4.0"
+    "uniqid": "^5.4.0",
+    "unzipper": "^0.12.3"
   }
 }
