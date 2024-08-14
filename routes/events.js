@@ -147,9 +147,14 @@ router.get("/:startDate/:endDate/:city", (req, res) => {
   const endDateEndHeure = moment(req.params.endDate).endOf("day").toDate();
   const endDateStartHeure = moment(req.params.endDate).startOf("day").toDate();
 
+  console.log("startDateStartHeure : ", startDateStartHeure)
+  // console.log("startDateEndHeure : ", startDateEndHeure)
+
+
+  console.log("endDateEndHeure : ", endDateEndHeure)
   // Si aucune catégorie n'est saisie, alors categories est un tableau vide
   let categories = req.query.categorie;
-  if (!categories) {
+  if (!categories) {  // console.log("endDateStartHeure : ", endDateStartHeure)
     categories = [];
   } else if (!Array.isArray(categories)) {
     categories = [categories];
@@ -175,14 +180,16 @@ router.get("/:startDate/:endDate/:city", (req, res) => {
       $unwind: "$placeInfo", // Décompose le tableau résultant de la jointure en documents individuels
     },
     {
-      $match: {
-        endDate: {
-          $gte: new Date(endDateStartHeure),
-          $lte: new Date(endDateEndHeure),
-        },
+      // trouver un évènement dont la date est >= date et heure de départ dans filtres de recherche, 
+      // et <= à la date et  heure de fin dans filtres de recherche
+
+      $match: { 
         startDate: {
-          $gte: new Date(startDateStartHeure),
-          $lte: new Date(startDateEndHeure),
+          $gte: new Date(startDateStartHeure), 
+        },
+        endDate: {
+          // $gte: new Date(endDateStartHeure),
+          $lte: new Date(endDateEndHeure),
         },
         categories: { $in: categories },
         "placeInfo.city": { $regex: city, $options: "i" },

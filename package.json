@@ -19,6 +19,7 @@
     "morgan": "~1.9.1",
     "node-fetch": "2",
     "nodemailer": "^6.9.14",
+    "react-router-dom": "^6.26.0",
     "sweetalert2": "^11.12.4",
     "uid2": "^1.0.0",
     "uniqid": "^5.4.0"
