@@ -75,7 +75,7 @@ router.post("/signin", (req, res) => {
 
   router.delete('/delete/:token', (req, res) => {            // on rajoute un nom de route delete pour specifier la route                  
     User.deleteOne({ token: req.params.token })
-      .then(() => {                                               // supprimer l'id qui est égal à 'id de la requête . c'est l'id qui correspond au bouton supprimer
+      .then(() => {                                               // Supprimer l'id qui est égal à 'id de la requête . c'est l'id qui correspond au bouton supprimer
         User.find()
           .then(data => {
             res.json({ result: true });                           
@@ -84,8 +84,9 @@ router.post("/signin", (req, res) => {
   })
 
 
+// route pour faire la demande de changement de mdp-//
 
-  router.post('/forgot-password', (req, res) => { // route pour faire la demande de changement de mdp-//
+  router.post('/forgot-password', (req, res) => { 
     const { email } = req.body;
     User.findOne({ email }).then(user => {
         if (!user) {
@@ -98,7 +99,9 @@ router.post("/signin", (req, res) => {
     user.resetPasswordToken = token;
     user.resetPasswordExpires = expirationDate;
     user.save();
+
     // Configurer le service de messagerie
+
     const transporter = nodemailer.createTransport({
       //La méthode createTransport est utilisée pour configurer et créer un transporteur (transport) qui enverra les emails via un service de messagerie (comme Gmail).
       service: "gmail",
@@ -136,7 +139,7 @@ router.post("/signin", (req, res) => {
   });
 });
 
-// 5BIS-Route pour renouveler son mot de passe
+//Route pour renouveler son mot de passe
 router.post("/reset-password/:token", (req, res) => {
   const { password } = req.body;
   User.findOne({
@@ -164,7 +167,7 @@ router.post("/reset-password/:token", (req, res) => {
 });
 })
 
-// 6- Route get les infos du user en fonction du token
+// Route get les infos du user en fonction du token
 router.get("/infos/:token", (req, res) => {
   User.find({ token: req.params.token }).then((data) => {
     console.log(data);
@@ -174,6 +177,7 @@ router.get("/infos/:token", (req, res) => {
 
 module.exports = router;
 
+// Route pour se connecter au service google pour authentification
 router.post('/google-auth', (req, res) => {
   const { name,email} = req.body;
   console.log("coucou")
@@ -203,29 +207,3 @@ router.post('/google-auth', (req, res) => {
   
   module.exports = router;
   
-
-
-/*
-  Demande de Réinitialisation (Route /forgot-password) :
-
-L'utilisateur fait une demande de réinitialisation en fournissant son email.   ((((route forgot/password))))
-Le serveur génère un token unique (crypto.randomBytes(32).toString('hex')) et une date d'expiration pour ce token (valide pendant une heure).
-Le token et la date d'expiration sont sauvegardés dans la base de données pour cet utilisateur (dans les champs resetPasswordToken et resetPasswordExpires).
-
-
-((((transporter.sendEmail))))est utilisée pour envoyer un email avec le module nodemailer dans Node.js
-
-Un email est envoyé à l'utilisateur avec un lien de réinitialisation, incluant le token en tant que paramètre d'URL.
-Réinitialisation du Mot de Passe (Route /reset-password/:token) :
-
-
-router.post('/reset-password/:token
-
-L'utilisateur clique sur le lien de réinitialisation dans l'email, qui le redirige vers une page où il peut entrer un nouveau mot de passe.
-Le serveur reçoit la demande de réinitialisation avec le nouveau mot de passe et le token dans l'URL.
-Le serveur vérifie si le token est valide (c'est-à-dire s'il correspond à un utilisateur et n'est pas expiré).
-Si le token est valide :
-Le nouveau mot de passe est hashé (chiffré) avec bcrypt et enregistré dans la base de données.
-Les champs resetPasswordToken et resetPasswordExpires sont effacés (mis à undefined), ce qui invalide le token après utilisation.
-La réponse JSON indique que la réinitialisation du mot de passe a été effectuée avec succès.
-*/
