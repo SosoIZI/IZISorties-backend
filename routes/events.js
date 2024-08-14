@@ -107,6 +107,9 @@ router.post("/api/openagenda", (req, res) => {
 });
 
 // 3- Route get en fonction de l'input saisi dans la barre de recherche
+
+//http://localhost:3000/events/search/:rennes test thunderCLIENT OK
+
 router.get("/search/:search", (req, res) => {
   Event.aggregate([
     {
@@ -188,25 +191,20 @@ router.get("/:startDate/:endDate/:city", (req, res) => {
           $gte: new Date(startDateStartHeure), 
         },
         endDate: {
-          // $gte: new Date(endDateStartHeure),
           $lte: new Date(endDateEndHeure),
         },
-        categories: { $in: categories },
-        "placeInfo.city": { $regex: city, $options: "i" },
-      },
-    },
-  ])
-  .then(events => {res.json({ events })})
-  .catch(error => {
-    console.error(error);
-    res.status(500).json({ error: 'Une erreur est survenue' });
-  });
-})
-.catch(error => {
-  console.error(error);
-  res.status(500).json({ error: 'Une erreur est survenue lors de la récupération de la ville' });
+            categories: { $in: categories },
+            "placeInfo.city": { $regex: city, $options: "i" },
+          },
+        },
+      ]).then((data) => {
+        console.log(data);
+        res.json({ events: data });
+      });
+  
+    });
 });
-});
+
 
 // 5- Route get en fonction du user (afficher les events que l'user a créé)
 router.get("/user/:id", (req, res) => {

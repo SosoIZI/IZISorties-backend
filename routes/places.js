@@ -126,12 +126,6 @@ router.put("/newevent", (req, res) => {
           });
       });
   })
-
-
-
-
-
-
   
   module.exports = router;
   
