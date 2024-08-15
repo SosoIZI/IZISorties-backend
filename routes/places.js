@@ -94,6 +94,7 @@ router.get('/cities', (req, res) => {
   });
 })
 
+
 // 6 - récupérer les données d'une ville sur l'API
 
 router.get('/:city', (req,res) => {
@@ -104,6 +105,7 @@ router.get('/:city', (req,res) => {
         })
       })
     
+module.exports = router;
 
 // 7 - Route pour récupérer toutes les places 
 router.get("/", (req, res) => {
