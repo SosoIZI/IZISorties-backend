@@ -289,7 +289,7 @@ router.get("/top/liked", (req, res) => {
 });
 
 // 11- Route pour chercher tous les events que l'user a liké
-router.get("/likelist/user/:token", (req, res) => {
+router.get("/likelist/like/user/:token", (req, res) => {
   User.findOne({ token: req.params.token }).then((userData) => {
     Event.find({ nbLike: { $in: userData._id } }).then((eventData) => {
       // tri dans l'ordre croissant des events
@@ -302,7 +302,7 @@ router.get("/likelist/user/:token", (req, res) => {
 });
 
 // 12- Route pour chercher tous les events que l'user a liké
-router.get("/bookinglist/user/:token", (req, res) => {
+router.get("/bookinglist/booking/user/:token", (req, res) => {
   User.findOne({ token: req.params.token }).then((userData) => {
     Event.find({
       nbBooking: { $in: userData._id },
