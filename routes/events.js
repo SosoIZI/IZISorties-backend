@@ -112,9 +112,7 @@ router.post("/api/openagenda", (req, res) => {
 });
 
 // 3- Route get en fonction de l'input saisi dans la barre de recherche
-
 //http://localhost:3000/events/search/:rennes test thunderCLIENT OK
-
 router.get("/search/:search", (req, res) => {
   Event.aggregate([
     {
@@ -143,7 +141,6 @@ router.get("/search/:search", (req, res) => {
   });
 });
 
-
 // géolib?
 // 4- Route get en fonction des filtres de recherche (dates, catégories, lieu)
 // pour tester cette route dans Thunder : http://localhost:3000/events/2024-04-01/2024-08-30/-1.65551/48.114985?categorie=music&categorie=cinema
@@ -154,14 +151,9 @@ router.get("/:startDate/:endDate/:city", (req, res) => {
   const endDateEndHeure = moment(req.params.endDate).endOf("day").toDate();
   const endDateStartHeure = moment(req.params.endDate).startOf("day").toDate();
 
-  console.log("startDateStartHeure : ", startDateStartHeure)
-  // console.log("startDateEndHeure : ", startDateEndHeure)
-
-
-  console.log("endDateEndHeure : ", endDateEndHeure)
   // Si aucune catégorie n'est saisie, alors categories est un tableau vide
   let categories = req.query.categorie;
-  if (!categories) {  // console.log("endDateStartHeure : ", endDateStartHeure)
+  if (!categories) {
     categories = [];
   } else if (!Array.isArray(categories)) {
     categories = [categories];
@@ -173,42 +165,43 @@ router.get("/:startDate/:endDate/:city", (req, res) => {
     .then(infos => {
       const city = infos.features[0].properties.city;
 
+      const matchConditions = {
+        startDate: { $gte: new Date(startDateStartHeure) },
+        endDate: { $lte: new Date(endDateEndHeure) },
+        "placeInfo.city": { $regex: city, $options: "i" },
+      };
 
-  Event.aggregate([
-    {
-      $lookup: {
-        from: "places", // La collection à joindre
-        localField: "place", // Le nom de la propriété (clé étrangère)
-        foreignField: "_id", // Le champ de la collection qui fait le lien
-        as: "placeInfo", // Le nom du champ de résultat après la jointure
-      },
-    },
-    {
-      $unwind: "$placeInfo", // Décompose le tableau résultant de la jointure en documents individuels
-    },
-    {
-      // trouver un évènement dont la date est >= date et heure de départ dans filtres de recherche, 
-      // et <= à la date et  heure de fin dans filtres de recherche
+      // Ajouter le filtre de catégorie uniquement si des catégories sont sélectionnées
+      if (categories.length > 0) {
+        matchConditions.categories = { $in: categories };
+      }
 
-      $match: { 
-        startDate: {
-          $gte: new Date(startDateStartHeure), 
-        },
-        endDate: {
-          $lte: new Date(endDateEndHeure),
-        },
-            categories: { $in: categories },
-            "placeInfo.city": { $regex: city, $options: "i" },
+      Event.aggregate([
+        {
+          $lookup: {
+            from: "places", // La collection à joindre
+            localField: "place", // Le nom de la propriété (clé étrangère)
+            foreignField: "_id", // Le champ de la collection qui fait le lien
+            as: "placeInfo", // Le nom du champ de résultat après la jointure
           },
+        },
+        {
+          $unwind: "$placeInfo", // Décompose le tableau résultant de la jointure en documents individuels
+        },
+        {
+          $match: matchConditions, // Appliquer les conditions de match
         },
       ]).then((data) => {
         console.log(data);
         res.json({ events: data });
       });
-  
+
+    })
+    .catch(error => {
+      console.error("Error fetching city data:", error);
+      res.status(500).json({ error: "Error fetching city data" });
     });
 });
-
 
 // 5- Route get en fonction du user (afficher les events que l'user a créé)
 router.get("/user/:id", (req, res) => {
@@ -289,7 +282,7 @@ router.get("/top/liked", (req, res) => {
 });
 
 // 11- Route pour chercher tous les events que l'user a liké
-router.get("/likelist/user/:token", (req, res) => {
+router.get("/likelist/like/user/:token", (req, res) => {
   User.findOne({ token: req.params.token }).then((userData) => {
     Event.find({ nbLike: { $in: userData._id } }).then((eventData) => {
       // tri dans l'ordre croissant des events
@@ -302,7 +295,7 @@ router.get("/likelist/user/:token", (req, res) => {
 });
 
 // 12- Route pour chercher tous les events que l'user a liké
-router.get("/bookinglist/user/:token", (req, res) => {
+router.get("/bookinglist/booking/user/:token", (req, res) => {
   User.findOne({ token: req.params.token }).then((userData) => {
     Event.find({
       nbBooking: { $in: userData._id },
@@ -316,7 +309,7 @@ router.get("/bookinglist/user/:token", (req, res) => {
   });
 });
 
-// Route DELETE pour supprimer les événements basés sur l'ID du lieu
+// 13 - Route DELETE pour supprimer les événements basés sur l'ID du lieu
 router.delete('/events/delete-by-place/:placeId', async (req, res) => {
   try {
     const placeId = req.params.placeId;
@@ -331,6 +324,42 @@ router.delete('/events/delete-by-place/:placeId', async (req, res) => {
     console.error("Erreur lors de la suppression des documents :", error);
     res.status(500).json({ error: 'Erreur lors de la suppression des documents.' });
   }
+});
+
+// 14- Route swipe à droite
+router.put("/swipe/droite/droite/:token/:idEvent", (req, res) => {
+  User.findOne({ token: req.params.token }).then((userData) => {
+    Event.findOne({ _id: req.params.idEvent }).then((eventData) => {
+      if (eventData && !eventData.nbLike.includes(userData._id)) {
+        Event.updateOne(
+          { _id: req.params.idEvent },
+          { $push: { nbLike: userData._id } }
+        ).then(() => {
+          res.json({ result: true });
+        });
+      } else {
+        res.json({ result: false, message: "l'utilisateur avait déjà liké cet event" });
+      }
+    });
+  });
+});
+
+// 15- Route swipe à gauche
+router.put("/swipe/gauche/gauche/:token/:idEvent", (req, res) => {
+  User.findOne({ token: req.params.token }).then((userData) => {
+    Event.findOne({ _id: req.params.idEvent }).then((eventData) => {
+      if (eventData && eventData.nbLike.includes(userData._id)) {
+        Event.updateOne(
+          { _id: req.params.idEvent },
+          { $pull: { nbLike: userData._id } }
+        ).then(() => {
+          res.json({ result: true });
+        });
+      } else {
+        res.json({ result: false, message: "l'utilisateur n'avait pas liké cet event" });
+      }
+    });
+  });
 });
 
 module.exports = router;
