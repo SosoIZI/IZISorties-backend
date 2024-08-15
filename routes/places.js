@@ -98,7 +98,7 @@ router.get('/:city', (req,res) => {
     
 module.exports = router;
 
-// 6- Route pour récupérer toutes les places
+// 6- Route pour récupérer toutes les places 
 router.get("/", (req, res) => {
   Place.find().then((data) => {
     res.json({ result: true, places: data });

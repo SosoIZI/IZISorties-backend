@@ -146,7 +146,6 @@ router.get("/search/:search", (req, res) => {
 
 // géolib?
 // 4- Route get en fonction des filtres de recherche (dates, catégories, lieu)
-// music&categorie=cinema
 // pour tester cette route dans Thunder : http://localhost:3000/events/2024-04-01/2024-08-30/-1.65551/48.114985?categorie=music&categorie=cinema
 router.get("/:startDate/:endDate/:city", (req, res) => {
   // Utiliser le module moment pour formater les dates
