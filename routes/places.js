@@ -22,7 +22,6 @@ router.post("/", (req, res) => {
       } 
   );
 
-
 // 2- Route pour ajouter une nouvelle Place (lieu où se passent des events) à partir de OpenAgenda
 router.post("/openagenda", (req, res) => {
   // d'abord je vais chercher tous les events de l'API et donc les places associées
@@ -86,7 +85,6 @@ router.get("/:cp/:name", (req, res) => {
 });
 
 //5- route GET pour récupérer toutes les villes dans la bdd
-
 router.get('/places', (req, res) => {
   Place.find()
   .then(data => {
@@ -94,9 +92,7 @@ router.get('/places', (req, res) => {
   });
 })
 
-
 // 6 - récupérer les données d'une ville sur l'API
-
 router.get('/:city', (req,res) => {
   fetch(`https://api-adresse.data.gouv.fr/search/?q=${req.params.city}`)
   .then((response) => response.json())
@@ -105,8 +101,6 @@ router.get('/:city', (req,res) => {
         })
       })
     
-module.exports = router;
-
 // 7 - Route pour récupérer toutes les places 
 router.get("/", (req, res) => {
   Place.find().then((data) => {
@@ -125,16 +119,5 @@ router.put("/newevent", (req, res) => {
         res.json({ result: "levent a ete rajoute a la place" });
       });
 });
-
-  router.delete('/delete/:token', (req, res) => {            // on rajoute un nom de route delete pour specifier la route                  
-    User.deleteOne({ token: req.params.token })
-      .then(() => {                                               // supprimer l'id qui est égal à 'id de la requête . c'est l'id qui correspond au bouton supprimer
-        User.find()
-          .then(data => {
-            res.json({ result: true });                           
-          });
-      });
-  })
   
   module.exports = router;
-  

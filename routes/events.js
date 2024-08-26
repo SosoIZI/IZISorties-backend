@@ -294,7 +294,7 @@ router.get("/likelist/like/user/:token", (req, res) => {
   });
 });
 
-// 12- Route pour chercher tous les events que l'user a liké
+// 12- Route pour chercher tous les events que l'user a booké
 router.get("/bookinglist/booking/user/:token", (req, res) => {
   User.findOne({ token: req.params.token }).then((userData) => {
     Event.find({

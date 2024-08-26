@@ -73,7 +73,7 @@ router.post("/signin", (req, res) => {
   });
 });
 
-  router.delete('/delete/:token', (req, res) => {            // on rajoute un nom de route delete pour specifier la route                  
+router.delete('/delete/:token', (req, res) => {            // on rajoute un nom de route delete pour specifier la route                  
     User.deleteOne({ token: req.params.token })
       .then(() => {                                               // Supprimer l'id qui est égal à 'id de la requête . c'est l'id qui correspond au bouton supprimer
         User.find()
@@ -83,9 +83,7 @@ router.post("/signin", (req, res) => {
       });
   })
 
-
 // route pour faire la demande de changement de mdp-//
-
   router.post('/forgot-password', (req, res) => { 
     const { email } = req.body;
     User.findOne({ email }).then(user => {
@@ -175,12 +173,10 @@ router.get("/infos/:token", (req, res) => {
   });
 });
 
-module.exports = router;
-
 // Route pour se connecter au service google pour authentification
 router.post('/google-auth', (req, res) => {
   const { name,email} = req.body;
-  console.log("coucou")
+ 
   User.findOne({ email }).then(user => {
     if (user) {
       // Si l'utilisateur existe, renvoyer le token
@@ -204,6 +200,4 @@ router.post('/google-auth', (req, res) => {
   });
 });
 
-  
-  module.exports = router;
-  
+module.exports = router;
