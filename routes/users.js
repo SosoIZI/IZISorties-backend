@@ -200,4 +200,6 @@ router.post('/google-auth', (req, res) => {
   });
 });
 
+console.log('hrllo vercel')
+
 module.exports = router;
