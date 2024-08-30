@@ -156,7 +156,7 @@ router.get("/:startDate/:endDate/:city", (req, res) => {
   if (!categories) {
     categories = [];
   } else if (!Array.isArray(categories)) {
-    categories = [categories];
+    categories = [categories]
   }
 
   // Récupérer la ville à partir des coordonnées
